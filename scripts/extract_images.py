@@ -73,27 +73,29 @@ def no_images_error(ide: str) -> None:
 
 def detect_ide() -> str:
     """Detect which IDE/agent the model is running in."""
-    # OpenCode: has env var + SQLite DB
+    # 1. OpenCode runtime env (definitive)
     if os.environ.get("OPENCODE") == "1":
         return "opencode"
-    # Claude Code: has env vars or config directory
-    if os.environ.get("CLAUDE_CODE_DISABLE_AUTO_MEMORY") is not None:
-        return "claude-code"
-    if (Path.home() / ".claude" / "projects").is_dir():
-        # Double-check by looking for recent session files
-        projects = Path.home() / ".claude" / "projects"
-        for proj_dir in projects.iterdir():
-            if proj_dir.is_dir() and any(proj_dir.glob("*.jsonl")):
-                return "claude-code"
-    # Cursor
-    if (Path.home() / ".cursor").is_dir():
-        return "cursor"
-    if (Path.home() / "Library" / "Application Support" / "Cursor").is_dir():
-        return "cursor"
-    # OpenCode (DB exists even without env var)
+
+    # 2. OpenCode DB exists (fallback without env var)
     opendb = Path.home() / ".local" / "share" / "opencode" / "opencode.db"
     if opendb.exists():
         return "opencode"
+
+    # 3. Claude Code — only by session files, NOT env vars
+    #    (CLAUDE_CODE_* vars are shell config, not runtime indicators)
+    projects = Path.home() / ".claude" / "projects"
+    if projects.is_dir():
+        for proj_dir in projects.iterdir():
+            if proj_dir.is_dir() and any(proj_dir.glob("*.jsonl")):
+                return "claude-code"
+
+    # 4. Cursor
+    for p in [Path.home() / ".cursor",
+              Path.home() / "Library" / "Application Support" / "Cursor"]:
+        if p.is_dir():
+            return "cursor"
+
     return "unknown"
 
 
