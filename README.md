@@ -175,4 +175,4 @@ ollama pull llava:13b      # скачать vision-модель (~8GB)
 
 ## Лицензия
 
-MIT. Делай что хочешь.
+MIT — см. [LICENSE](LICENSE). Делай что хочешь.
